@@ -42,7 +42,7 @@ def plot():
     plt.title(dataset)
     plt.ylabel(utils.metric_for_dataset(dataset))
     plt.xlabel('Number of support examples')
-    pplt.savefig("q3_plot.png", bbox_inches="tight")
+    plt.savefig("q3_plot.png", bbox_inches="tight")
 
 
 if __name__ == '__main__':
