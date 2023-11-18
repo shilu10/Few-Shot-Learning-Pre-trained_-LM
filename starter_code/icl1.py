@@ -45,7 +45,7 @@ def get_icl_prompts(
     support_inputs: List[str],
     support_labels: List[str],
     test_input: str,
-    prompt_mode: str = "none",
+    prompt_mode: str = "babi",
 ) -> str:
     """
     Take a list of contexts and combine them into k-shot prompts.
@@ -108,7 +108,7 @@ def get_icl_prompts(
             prompt += ques
             prompt += " In the "
             prompt += ans 
-            prompt += "."
+            prompt += ". "
 
         elif prompt_mode == "none":
             ques = support_inputs[perm]
@@ -133,7 +133,7 @@ def get_icl_prompts(
             
 
     if prompt_mode == "babi":
-        prompt += " " + test_input + " In the "
+        prompt += test_input + " In the "
 
     elif prompt_mode == "none":
         prompt += " " + test_input 
@@ -222,7 +222,6 @@ def do_sample(
         The sampled tokens (a python list of ints/zero-dim tensors), not including the input_ids prefix
           OR the stop token (if we hit the stop token before max_tokens)
     """
-    sampled_tokens = []
     # Complete this for Q1.1b
     ### START CODE HERE ###
     sampled_tokens = []
@@ -230,6 +229,7 @@ def do_sample(
     for _ in range(max_tokens):
         with torch.inference_mode():
             output = model(input_ids)
+
         logits = output["logits"]
         greedy_token = logits[0, -1, :].argmax(dim=-1)
 
@@ -301,13 +301,14 @@ def run_icl(
                             # Note that the tokenizer by default will give you results on the CPU, so you will need to move them to the
                             # proper device. You can do this with the .to() method, e.g.,
                             #   my_tensor.to(DEVICE), where DEVICE is defined at lines 32-35.
-                            decoded_prediction = ""
                             # YOUR CODE HERE, complete for Q1.1c. Should be ~5-10 lines of code.
                             prompt = get_icl_prompts(
                                 support_inputs=support_x,
                                 support_labels=support_y,
                                 test_input=test_input,
                                 prompt_mode=prompt_mode)
+                            
+                            print(prompt)
                             tokens = tokenizer.encode(prompt, return_tensors='pt')
                             tokens = tokens.to(DEVICE)
                             sampled_tokens = do_sample(model, tokens, stop_tokens, max_tokens)
