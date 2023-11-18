@@ -105,22 +105,20 @@ def parameters_to_fine_tune(model: nn.Module, mode: str) -> Iterable[nn.Paramete
         # Complete this for Q0.1
         parameters_to_fine_tune = model.parameters()
 
-        assert False, "Complete this for Q0.1"
-
     elif mode == "last":
         # Only fine tune the last 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        parameters_to_fine_tune = model.parameters()[-2: ]
 
     elif mode == "first":
         # Only fine tune the first 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        parameters_to_fine_tune = model.parameters()[: 2]
 
     elif mode == "middle":
         # Only fine tune middle 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        parameters_to_fine_tune = model.parameters()[: 2]
 
     elif mode.startswith("lora"):
         # Only fine tune the rank decomposition matrices A and B from the LoRA layers.
@@ -168,11 +166,17 @@ def get_loss(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.
         loss = F.cross_entropy(logits=unnormalized_logits, target=target)
 
     elif unnormalized_logits.dim() == 3:
-        # This is the generation case.
+        # This is the generation case. 
         # Remember that the target tensor may contain -100 values, which should be masked out
         # and that an off-by-one shift is needed between the logits and targets.
         # Complete this for Q2.2d
-        assert False, "Complete this for Q2.2d"
+        losses = 0
+        n_indx = unnormalized_logits.shape[1]
+        for indx in range(n_indx):
+            _loss = F.cross_entropy(logits=unnormalized_logits[indx], target=target[indx]) 
+            losses += _loss 
+
+        loss = losses / n_indx 
 
     else:
         raise ValueError(
@@ -210,14 +214,18 @@ def get_acc(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.T
         elements (and sequence timesteps, if applicable)
     """
     accuracy: torch.Tensor = None
+    unnormalized_logits = unnormalized_logits.to(DEVICE)
+    targets = targets.to(DEVICE)
     if unnormalized_logits.dim() == 2:
         # This is the classification case.
         # Complete this for Q0.1
-        assert False, "Complete this for Q0.1"
+        accuracy = (unnormalized_logits.argmax(dim=1) == targets).type(torch.float).mean()
+
     elif unnormalized_logits.dim() == 3:
         # This is the generation case.
         # Complete this for Q2.2d
         assert False, "Complete this for Q2.2d"
+
     else:
         raise ValueError(
             f"Logits should either be 2-dim (for classification) or 3-dim (for generation); got {unnormalized_logits.dim()}"
