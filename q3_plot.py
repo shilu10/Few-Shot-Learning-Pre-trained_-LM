@@ -11,7 +11,7 @@ def plot():
     model = 'med'
     mode = 'lora16'
     x_vals = set()
-    for k in [0,1,8,128]:
+    for k in [0,1,8,32]:
         fn = '_'.join([model, dataset, str(k), mode])
         id_ = '_'.join([model, dataset, mode])
         with open(f'{utils.RESULTS_DIR}/ft/{fn}.json', 'r') as f:
