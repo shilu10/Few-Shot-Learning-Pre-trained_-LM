@@ -26,6 +26,8 @@ parser.add_argument('--mode', default='all')
 parser.add_argument('--debug', action='store_true')
 parser.add_argument('--repeats', default=1, type=int)
 parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
+parser.add_argument("--plot_name", default="plot.png")
+
 args = parser.parse_args()
 
 
@@ -451,43 +453,51 @@ def run_ft(models: List[str], datasets: List[str], ks: List[int], modes: List[st
                     results = {}
 
 
-def plot(models, datasets, ks, modes):
+def plot_ft(models, datasets, ks, modes, output_path: str):
     data = defaultdict(lambda: defaultdict(list))
-    question = 'ft'
+    question = "ft"
 
     x_vals = set()
     for dataset in datasets:
         for model, mode in itertools.product(models, modes):
             for k in ks:
-                fn = '_'.join([model, dataset, str(k), mode])
-                id_ = '_'.join([model, dataset, mode])
-                with open(f'results/{question}/{fn}.json', 'r') as f:
-                    score = json.load(f)['metric']
-                    data[id_]['x'].append(k)
+                fn = "_".join([model, dataset, str(k), mode])
+                id_ = "_".join([model, dataset, mode])
+                with open(f"{utils.RESULTS_DIR}/{question}/{fn}.json", "r") as f:
+                    score = json.load(f)["metric"]
+                    data[id_]["x"].append(k)
                     x_vals.add(k)
-                    data[id_]['y'].append(score)
+                    data[id_]["y"].append(score)
 
         for k, v in data.items():
-            plt.plot(v['x'], v['y'], label=k)
+            plt.plot(v["x"], v["y"], label=k)
 
     if max(x_vals) > 4:
-        plt.xscale('symlog')
+        plt.xscale("symlog")
     ax = plt.gca()
     ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
     ax.xaxis.set_ticks(sorted(x_vals))
     plt.legend()
-    plt.title(' & '.join(datasets))
-    plt.ylabel('/'.join([utils.metric_for_dataset(dataset) for dataset in datasets]))
-    plt.xlabel('Number of support examples')
-    plt.show()
+    plt.title(" & ".join(datasets))
+    plt.ylabel("/".join([utils.metric_for_dataset(dataset) for dataset in datasets]))
+    plt.xlabel("Number of support examples")
+    # plt.show()
+    plt.savefig(output_path, bbox_inches="tight")
+
 
 def run():
-    ks = [int(k) for k in args.k.split(',')]
-    if args.task == 'ft':
-        run_ft(args.model.split(','), args.dataset.split(','), ks, args.mode.split(','))
-    elif args.task == 'plot':
-        plot(args.model.split(','), args.dataset.split(','), ks, args.mode.split(','))
+    ks = [int(k) for k in args.k.split(",")]
+    if args.task == "ft":
+        run_ft(args.model.split(","), args.dataset.split(","), ks, args.mode.split(","))
+    elif args.task == "plot":
+        plot_ft(
+            args.model.split(","),
+            args.dataset.split(","),
+            ks,
+            args.mode.split(","),
+            args.plot_name,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
