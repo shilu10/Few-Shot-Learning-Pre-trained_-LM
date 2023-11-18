@@ -98,11 +98,55 @@ def get_icl_prompts(
         len(support_inputs)
     )  # Your code should use this ordering!
 
-    ### START CODE HERE ###
-    assert False, "Complete this for Q1.1a"
+    for perm in permutation:
+
+        ### START CODE HERE ###
+        if prompt_mode == "babi":
+            ques = support_inputs[perm]
+            ans = support_labels[perm]
+
+            prompt += ques
+            prompt += " In the "
+            prompt += ans 
+            prompt += "."
+
+        elif prompt_mode == "none":
+            ques = support_inputs[perm]
+            ans = support_labels[perm]
+
+            prompt += ques
+            prompt += ' '
+            prompt += ans 
+
+        elif prompt_mode == "tldr":
+            ques = support_inputs[perm]
+            ans = support_labels[perm]
+
+            prompt += ques
+            prompt += " TL;DR: "
+            prompt += ans 
+
+        elif prompt_mode == "custom":
+            article = support_inputs[perm]
+            summary = support_labels[perm]
+            prompt += "article: " + article + " summary: " + summary
+            
+
+    if prompt_mode == "babi":
+        prompt += " " + test_input + " In the "
+
+    elif prompt_mode == "none":
+        prompt += " " + test_input 
+
+    elif prompt_mode == "tldr":
+        prompt +=  test_input + " TL;DR: "
+
+    elif prompt_mode == "custom":
+        prompt += test_input + "summary: "
+
+
     ### END CODE HERE ###
 
-    assert prompt[-1] != " "
     return prompt
 
 
@@ -181,7 +225,21 @@ def do_sample(
     sampled_tokens = []
     # Complete this for Q1.1b
     ### START CODE HERE ###
-    assert False, "Complete this for Q1.1b"
+    sampled_tokens = []
+
+    for _ in range(max_tokens):
+        with torch.inference_mode():
+            output = model(input_ids)
+        logits = output["logits"]
+        greedy_token = logits[0, -1, :].argmax(dim=-1)
+
+        if greedy_token.item() in stop_tokens:
+            break
+        else:
+            sampled_tokens.append(greedy_token.item())
+
+        input_ids = torch.cat([input_ids, greedy_token.view(1, -1)], dim=-1)
+    
     ### END CODE HERE ###
     return sampled_tokens
 
@@ -245,7 +303,15 @@ def run_icl(
                             #   my_tensor.to(DEVICE), where DEVICE is defined at lines 32-35.
                             decoded_prediction = ""
                             # YOUR CODE HERE, complete for Q1.1c. Should be ~5-10 lines of code.
-                            assert False, "Complete this for Q1.1c"
+                            prompt = get_icl_prompts(
+                                support_inputs=support_x,
+                                support_labels=support_y,
+                                test_input=test_input,
+                                prompt_mode=prompt_mode)
+                            tokens = tokenizer.encode(prompt, return_tensors='pt')
+                            tokens = tokens.to(DEVICE)
+                            sampled_tokens = do_sample(model, tokens, stop_tokens, max_tokens)
+                            decoded_prediction = tokenizer.decode(sampled_tokens, skip_special_tokens=True)
                             # END YOUR CODE
 
                             predictions.append(decoded_prediction)

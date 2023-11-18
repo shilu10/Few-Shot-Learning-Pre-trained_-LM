@@ -87,6 +87,7 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
         d = d.map(strip_target)
         d = d.add_column("simple_y", d["y"])
         return d[:n_train], d[n_train : n_train + n_val]
+
     elif dataset == "trivia":
         n_train = 256
         d = datasets.load_dataset("trivia_qa", "rc.nocontext", split="train[:1%]")
@@ -123,11 +124,13 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
         data = {"x": stories, "y": answers, "simple_y": answers}
         d = datasets.Dataset.from_dict(data)
         return d[:n_train], d[n_train : n_train + n_val]
+
     elif dataset == "amazon":
         # d = datasets.load_dataset("amazon_us_reviews", "Video_v1_00")["train"]
         data_files = "data/amazon_reviews_us_Video_v1_00.csv"
         if not os.path.exists(data_files):
             data_files = "starter_code/data/amazon_reviews_us_Video_v1_00.csv"
+            
         try:
             d = datasets.load_dataset("csv", data_files=data_files)["train"]
         except FileNotFoundError:
