@@ -51,7 +51,7 @@ def model2hfname(model: str) -> str:
 def dataset2hfname(dataset: str) -> str:
     return {
         "mnli": ("multi_nli",),
-        "amazon": ("amazon_us_reviews", "Video_v1_00"),
+        "yelp": ("yelp_review_full"),
         "cnn": ("cnn_dailymail", "3.0.0"),
         "math": ("math_qa",),
         "tos": ("ought/raft", "terms_of_service"),
@@ -125,23 +125,24 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
         d = datasets.Dataset.from_dict(data)
         return d[:n_train], d[n_train : n_train + n_val]
 
-    elif dataset == "amazon":
+    elif dataset == "yelp":
         # d = datasets.load_dataset("amazon_us_reviews", "Video_v1_00")["train"]
-        data_files = "data/amazon_reviews_us_Video_v1_00.csv"
+        data_files = "data/yelp_review_full.csv"
         if not os.path.exists(data_files):
-            data_files = "starter_code/data/amazon_reviews_us_Video_v1_00.csv"
+            data_files = "starter_code/data/yelp_review_full.csv"
             
         try:
             d = datasets.load_dataset("csv", data_files=data_files)["train"]
         except FileNotFoundError:
             print(
-                "PLEASE DOWNLOAD THE AMAZON DATASET FROM https://drive.google.com/file/d/1RLCPCEvJVTvUbn-D426Avwg6hynSBgU3/view?usp=sharing AND PLACE IT IN data/amazon_reviews_us_Video_v1_00.csv"
+                "PLEASE DOWNLOAD THE YELP DATASET FROM Huggingface"
             )
             exit(1)
-        filter_fn = lambda rows: ["sex" not in r.lower() for r in rows["review_body"]]
-        d = d.filter(filter_fn, batched=True, batch_size=None)
-        x = d["review_body"]
-        y = [s - 1 for s in d["star_rating"]]
+        #filter_fn = lambda rows: ["sex" not in r.lower() for r in rows["review_body"]]
+        #d = d.filter(filter_fn, batched=True, batch_size=None)
+        x = d["text"]
+        y = d["label"]
+
         train = defaultdict(lambda: [None] * 5 * n_train)
         val = defaultdict(lambda: [None] * 5 * n_val)
         counts = defaultdict(int)
@@ -155,7 +156,9 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
                 val["x"][(c - n_train) * 5 + y[idx]] = x[idx]
                 val["y"][(c - n_train) * 5 + y[idx]] = y[idx]
                 counts[y[idx]] += 1
+
         return train, val
+        
     elif dataset == "xsum":
         n_train = 256
         d = datasets.load_dataset("xsum", split="train")
@@ -217,7 +220,7 @@ def metric_for_dataset(dataset: str):
         "xsum": "rouge",
         "trivia": "exact match",
         "babi": "exact match",
-        "amazon": "classification accuracy",
+        "yelp": "classification accuracy",
     }[dataset]
 
 
@@ -226,7 +229,7 @@ def early_stop_thresold(dataset: str):
         "cnn": 0.8,
         "trivia": 0.7,
         "babi": 0.9,
-        "amazon": 0.75,
+        "yelp": 0.75,
         "xsum": 0.55,
     }[dataset]
 
