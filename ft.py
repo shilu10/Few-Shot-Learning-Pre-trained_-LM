@@ -130,6 +130,7 @@ def get_loss(logits: torch.tensor, targets: torch.tensor) -> torch.tensor:
     targets = targets.to(DEVICE)
     if logits.dim() == 2:
         loss = F.cross_entropy(input=logits, target=targets)
+        
     elif logits.dim() == 3:
         # Account for offset between logits and targets
         logits = logits[:, :-1, :]
@@ -224,6 +225,7 @@ def ft_bert(model, tok, x, y, mode, batch_size=8):
             pbar.set_description(f'Fine-tuning acc: {total_acc:.04f}')
             if total_acc > 0.75:
                 break
+
     return model
 
 
@@ -241,7 +243,7 @@ def tokenize_gpt2_batch(tokenizer, x, y):
     
     Returns:
         A dictionary with the following keys:
-            - input_ids: a tensor of shape [batch_size, sequence_length] 
+            - : a tensor of shinput_idsape [batch_size, sequence_length] 
                 containing the token ids
             - attention_mask: a tensor of shape [batch_size, sequence_length] 
                 containing 1s and 0s indicating which tokens are padding
@@ -401,7 +403,7 @@ def run_ft(models: List[str], datasets: List[str], ks: List[int], modes: List[st
             n_val = 1   
         train, val = utils.get_dataset(dataset, max(ks), n_val=n_val)
         for model_name, mode in itertools.product(models, modes):
-            if dataset == 'amazon':
+            if dataset == 'yelp':
                 model, tokenizer = utils.get_model_and_tokenizer(model_name, transformers.AutoModelForSequenceClassification, num_labels=5)
             else:
                 model, tokenizer = utils.get_model_and_tokenizer(model_name, transformers.AutoModelForCausalLM)
@@ -412,13 +414,15 @@ def run_ft(models: List[str], datasets: List[str], ks: List[int], modes: List[st
                 for repeat in range(args.repeats):
                     if repeat > 0:
                         print(f'Beginning repeat #{repeat}')
-                    if dataset == 'amazon':
+                    if dataset == 'yelp':
                         fine_tuned = ft_bert(model, tokenizer, train['x'][:k*5], train['y'][:k*5], mode)
                         val_acc = eval(fine_tuned, tokenizer, val)
                         results['_'.join([model_name, dataset, str(k), mode])] = val_acc.item()
+                    
                     else:
                         if k > 0:
                             fine_tuned = ft_gpt2(model, tokenizer, train['x'][:k], train['simple_y'][:k], mode, dataset)
+                        
                         else:
                             fine_tuned = copy.deepcopy(model)
                             fine_tuned.to(DEVICE)
