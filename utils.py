@@ -132,7 +132,7 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
             data_files = "starter_code/data/yelp_review_full.csv"
             
         try:
-            d = datasets.load_dataset("csv", data_files=data_files)["train"]
+            d = datasets.load_dataset('yelp_review_full')["train"]
         except FileNotFoundError:
             print(
                 "PLEASE DOWNLOAD THE YELP DATASET FROM Huggingface"
